@@ -41,9 +41,31 @@ function reg(...args) {
 
 const node = process.execPath
 const command = `"${node}" "${path.join(here, 'handler.js')}" "${outDir}" "%1"`
-reg('add', 'HKCU\\Software\\Classes\\jbtest', '/ve', '/d', 'URL:jbtest', '/f')
-reg('add', 'HKCU\\Software\\Classes\\jbtest', '/v', 'URL Protocol', '/d', '', '/f')
-reg('add', 'HKCU\\Software\\Classes\\jbtest\\shell\\open\\command', '/ve', '/d', command, '/f')
+// PowerShell writes the strings exactly; reg.exe's own quoting of an argument
+// that holds quotes does not survive node's argv escaping
+function ps(script, env = {}) {
+  return spawnSync('powershell', ['-NoProfile', '-Command', script], {
+    env: { ...process.env, ...env },
+    encoding: 'utf8',
+  })
+}
+const registered = ps(
+  `
+  $k = 'HKCU:\\Software\\Classes\\jbtest'
+  New-Item -Path "$k\\shell\\open\\command" -Force | Out-Null
+  Set-ItemProperty -Path $k -Name '(Default)' -Value 'URL:jbtest'
+  Set-ItemProperty -Path $k -Name 'URL Protocol' -Value ''
+  Set-ItemProperty -Path "$k\\shell\\open\\command" -Name '(Default)' -Value $env:JBTEST_COMMAND
+  (Get-ItemProperty -Path "$k\\shell\\open\\command").'(default)'
+  `,
+  { JBTEST_COMMAND: command },
+)
+console.log('wanted  :', command)
+console.log('registry:', registered.stdout.trim(), registered.stderr.trim())
+
+// the handler on its own, with no shell or registry in the way
+execFileSync(node, [path.join(here, 'handler.js'), outDir, 'jbtest://open?id=direct'])
+console.log('handler run directly wrote:', fs.readdirSync(outDir))
 
 const policy = '[{"allowed_origins":["*"],"protocol":"jbtest"}]'
 for (const key of [
