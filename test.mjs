@@ -91,6 +91,8 @@ async function received(id, sent, timeoutMs = 12000) {
         verdict:
           got === sent
             ? 'intact'
+            : got === sent.replace('://open?', '://open/?')
+              ? 'intact, "/" added after open'
             : sent.startsWith(got)
               ? 'TRUNCATED'
               : got.length === sent.length
