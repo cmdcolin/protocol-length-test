@@ -9,5 +9,5 @@ NSIS-installed Electron app gets, launches links of several lengths through
 `Start-Process`, `rundll32 url.dll`, and a real click in Chrome and Edge, and
 writes a table of sent against received length to the run summary.
 
-Handler: `handler.js` is run directly by `node.exe`, so no `cmd.exe` limit sits
+Handler: `handler.cjs` is run directly by `node.exe`, so no `cmd.exe` limit sits
 between the shell and the handler.

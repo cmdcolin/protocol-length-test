@@ -40,7 +40,7 @@ function reg(...args) {
 }
 
 const node = process.execPath
-const command = `"${node}" "${path.join(here, 'handler.js')}" "${outDir}" "%1"`
+const command = `"${node}" "${path.join(here, 'handler.cjs')}" "${outDir}" "%1"`
 // PowerShell writes the strings exactly; reg.exe's own quoting of an argument
 // that holds quotes does not survive node's argv escaping
 function ps(script, env = {}) {
@@ -64,7 +64,7 @@ console.log('wanted  :', command)
 console.log('registry:', registered.stdout.trim(), registered.stderr.trim())
 
 // the handler on its own, with no shell or registry in the way
-execFileSync(node, [path.join(here, 'handler.js'), outDir, 'jbtest://open?id=direct'])
+execFileSync(node, [path.join(here, 'handler.cjs'), outDir, 'jbtest://open?id=direct'])
 console.log('handler run directly wrote:', fs.readdirSync(outDir))
 
 const policy = '[{"allowed_origins":["*"],"protocol":"jbtest"}]'
