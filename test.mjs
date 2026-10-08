@@ -118,6 +118,17 @@ async function record(via, tag, length, launch) {
   console.log(via, sent.length, got, verdict, note)
 }
 
+// controls: a bare link, then one with the percent-encoded payload
+for (const link of [
+  'jbtest://open?id=ctl-bare',
+  'jbtest://open?id=ctl-amp&url=x',
+  'jbtest://open?id=ctl-pct&url=https%3A%2F%2Fjbrowse.org%2F%3Fa%3D%257B%2522x%2522%257D',
+]) {
+  const r = ps('Start-Process -FilePath $env:JBTEST_LINK', { JBTEST_LINK: link })
+  await new Promise(r => setTimeout(r, 4000))
+  console.log('control', link, '| status', r.status, r.stderr.trim().slice(0, 200), '| files', fs.readdirSync(outDir))
+}
+
 // 1. the shell: ShellExecuteEx, which is what the 2083 suspicion is about
 for (const length of LENGTHS) {
   await record('Start-Process (ShellExecute)', 'ps', length, sent => {
@@ -188,6 +199,12 @@ for (const [name, candidates] of Object.entries(BROWSERS)) {
   await browser.close()
 }
 server.close()
+
+const files = fs.readdirSync(outDir)
+console.log('files at the end:', files.length, files.slice(0, 12))
+for (const f of files.slice(0, 3)) {
+  console.log(f, JSON.stringify(fs.readFileSync(path.join(outDir, f), 'utf8').slice(0, 160)))
+}
 
 const table = [
   '| Launched through | Sent | Received | Result | Note |',
